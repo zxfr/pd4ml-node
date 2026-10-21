@@ -5,11 +5,11 @@ HTML and CSS to **PDF**, **PDF/A**, **PDF/UA**, **ZUGFeRD/Factur-X**, **DOCX**, 
 available to Node.js applications. New converters use PD4ML's **v42 layout engine** by default.
 
 ```
-npm install github:zxfr/pd4ml-node
+npm install pd4ml
 ```
 
-or a release package from <https://github.com/zxfr/pd4ml-node/releases>
-(`npm install https://github.com/zxfr/pd4ml-node/releases/download/v1.0.0/pd4ml-1.0.0.tgz`). Either way the module is `pd4ml`.
+The package is on npm (<https://www.npmjs.com/package/pd4ml>); its contents and releases are also
+on GitHub (<https://github.com/zxfr/pd4ml-node>).
 
 ```js
 const { PD4ML, PageSize, PageMargins, Units, PdfSpec } = require('pd4ml');

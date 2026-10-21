@@ -46,17 +46,13 @@ containers, use an image with both Node and Java, or add a JRE to the Node image
 ### 2.1 Install the module
 
 ```
-npm install github:zxfr/pd4ml-node
+npm install pd4ml
 ```
 
-or install a release package from <https://github.com/zxfr/pd4ml-node/releases>, by its URL or
-after downloading it:
-
-```
-npm install https://github.com/zxfr/pd4ml-node/releases/download/v1.0.0/pd4ml-1.0.0.tgz
-```
-
-Either way the module is named `pd4ml` (`require('pd4ml')`, `import ... from 'pd4ml'`).
+The package is published on npm as [`pd4ml`](https://www.npmjs.com/package/pd4ml). The same
+package is on GitHub, <https://github.com/zxfr/pd4ml-node>, with each version's `.tgz` attached
+to its [release](https://github.com/zxfr/pd4ml-node/releases); `npm install github:zxfr/pd4ml-node`
+installs it from there.
 
 This installs the module, its TypeScript declarations and the `pd4ml` command (`npx pd4ml ...`).
 The module has no npm dependencies.
@@ -541,6 +537,7 @@ pd.renderAsImages('pages', 'page', Constants.PNG24);          // page files in a
 ```
 
 The image formats are `PNG8`, `PNG24`, `TIFF` and `TIFF_COMPRESSED` (constants in `Constants`).
+The TIFF formats need Java 9 or later.
 The v42 engine does not support the multi-page TIFF formats yet; use the v40 engine for them.
 
 With the v42 engine, DOCX/RTF output can be made *editable*: positioned content becomes text
@@ -744,6 +741,7 @@ Without a license, PD4ML is fully functional but marks its output. See
 | Output is watermarked | No license is installed ([licensing](https://pd4ml.com/docs/#3.-licensing)). |
 | Squares instead of characters | The fonts lack those glyphs. Provide fonts with `useTTF` ([fonts](https://pd4ml.com/docs/#9.-fonts-bookmarks-and-hyperlinks)). |
 | `NoClassDefFoundError: org/bouncycastle/...` with `setPermissions` | The Bouncy Castle jars are missing. Install without `--no-bouncycastle`, or add them to the classpath. |
+| `NoClassDefFoundError: com/sun/media/jai/...` with `renderAsImages` / `renderPng` | PD4ML 4.1.1 and earlier need the Java Advanced Imaging jars for page images. Use a newer PD4ML build, or add `jai-core` and `jai-codec` 1.1.3 (from the JBoss Maven repository) to the classpath. |
 | Warning "has no v42 layout engine" | The PD4ML build predates 4.2, so the conversion uses its own engine. Use a 4.2 build for v42. |
 | `JavaError: ... NoSuchMethodException` | No Java method of that name takes those argument types. Check [api.md](api.md); pass floats with `Java.float(10)`, binary data as a `Buffer`. |
 
