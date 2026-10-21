@@ -1,0 +1,45 @@
+{
+  "name": "pd4ml",
+  "version": "1.0.0",
+  "description": "PD4ML for Node.js: HTML and CSS to PDF, PDF/A, PDF/UA, ZUGFeRD, DOCX, RTF and images with the full PD4ML API",
+  "keywords": [
+    "pdf",
+    "html",
+    "html-to-pdf",
+    "pdfa",
+    "pdfua",
+    "zugferd",
+    "factur-x",
+    "docx",
+    "rtf",
+    "pd4ml"
+  ],
+  "homepage": "https://github.com/zxfr/pd4ml-node",
+  "license": "UNLICENSED",
+  "author": "PD4ML <support@pd4ml.com>",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "pd4ml": "bin/pd4ml.js"
+  },
+  "files": [
+    "index.js",
+    "index.mjs",
+    "index.d.ts",
+    "lib/",
+    "bin/",
+    "docs/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
