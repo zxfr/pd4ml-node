@@ -65,6 +65,10 @@ export interface PD4ML extends PD4MLJava {
   useHtmlRenderer(engine?: 'v42' | 'v40' | LayoutEngine, htmlWidth?: number | null, params?: Record<string, string | number> | null): void;
   readHTML(source: Source, baseUrl?: string | null, encoding?: string | null): void;
   readHtmlString(html: string, baseUrl?: string | null): void;
+  /** Reads an e-mail message (.eml): a path or URL, its bytes, or a Java URL/InputStream. */
+  readEML(source: Source): void;
+  /** Reads a web page saved as a single file (.mht, .mhtml): as readEML. */
+  readMHT(source: Source): void;
   writePDF(): Buffer;
   writePDF(target: null, spec?: string | PdfSpec | null): Buffer;
   writePDF(target: Target, spec?: string | PdfSpec | null): void;
@@ -127,6 +131,10 @@ export interface InstallOptions {
   quiet?: boolean;
   bouncycastle?: boolean;
 }
+/**
+ * Downloads a PD4ML build and makes it the default; returns the jar's path. The default version
+ * ('latest') is the most recent release from 4.2.0 on, else the most recent 4.2.x snapshot.
+ */
 export function install(version?: string, options?: InstallOptions): string;
 export function installedJar(home?: string): string | null;
 export function installedClasspath(home?: string): string[];
@@ -211,14 +219,18 @@ export interface PD4MLJava extends JavaObject {
   testTermination(): void;
   getHeight(width: number | JavaFloat): number;
   getDocumentTitle(): string;
+  layout(): Layout;
+  getDocument(): Document;
   setRenderingHints(hints: Record<string, string>): void;
   dump(mode: number | JavaFloat): string;
   protectPhysicalUnitDimensions(keepPhysicalUnitDimensions: boolean): void;
   setDynamicData(map: Record<string, string>): void;
+  addAllowedResourceLocation(locations: string): void;
   setParam(key: string, value: string): void;
   getLastRenderInfo(key: string): unknown;
   outputRange(description: string): void;
   addMetadata(key: string, value: string, hide: boolean): void;
+  addMetadata(namespaceURI: string, prefix: string, key: string, value: string): void;
   applyKerning(enable: boolean): void;
   enableLigatures(enable: boolean): void;
   getCache(): unknown;
@@ -257,7 +269,6 @@ export interface ConstantsClass extends JavaClass {
   readonly PD4ML_EXTRA_RESOURCE_LOADERS: string;
   readonly PD4ML_DOCUMENT_VIEW_MODE: string;
   readonly PD4ML_DOCUMENT_DATE: string;
-  readonly PD4ML_WORD_EDITABLE: string;
   readonly PD4ML_DOCUMENT_XMP_DATE: string;
   readonly PD4ML_FAKE_BROWSER: string;
   readonly PD4ML_CACHE_ENABLE: string;
@@ -476,6 +487,7 @@ export interface PdfSpec extends JavaObject {
   requiresOutputInternet(): boolean;
   allowsExternalHyperlinking(): boolean;
   requiresReliableUnicodeSemantics(): boolean;
+  hasPdfVersion(): boolean;
   getPdfVersionLabel(): string;
   getPdfExtLevel(): number;
   getPdfaVersion(): number;
@@ -653,3 +665,128 @@ export interface StatusMessageClass extends JavaClass {
   addUniqueMessage(statusMessages: JavaObject, message: StatusMessage): boolean;
 }
 export const StatusMessage: StatusMessageClass;
+
+/** The Java class `com.pd4ml.dom.Node` (the DOM API, v42 engine; DMS and UA editions). */
+export interface Node extends JavaObject {
+  getNodeName(): string;
+  getParentNode(): Node | null;
+  getParentElement(): Element | null;
+  getOwnerDocument(): Document;
+  getChildNodes(): Node[];
+  hasChildNodes(): boolean;
+  getFirstChild(): Node | null;
+  getLastChild(): Node | null;
+  getNextSibling(): Node | null;
+  getPreviousSibling(): Node | null;
+  getTextContent(): string;
+  setTextContent(text: string): void;
+  appendChild(child: Node): Node;
+  insertBefore(child: Node, ref: Node): Node;
+  replaceChild(replacement: Node, old: Node): Node;
+  removeChild(child: Node): Node;
+  remove(): void;
+  cloneNode(deep: boolean): Node;
+  contains(other: Node): boolean;
+  toHtml(): string;
+  equals(o: unknown): boolean;
+}
+
+/** The Java class `com.pd4ml.dom.Document` (the DOM API, v42 engine; DMS and UA editions). */
+export interface Document extends Node {
+  getDocumentElement(): Element;
+  getHead(): Element;
+  getBody(): Element;
+  getDoctype(): DocumentType | null;
+  isQuirksMode(): boolean;
+  getBaseURI(): string;
+  getTitle(): string;
+  getElementById(id: string): Element | null;
+  getElementsByTagName(name: string): Element[];
+  getElementsByClassName(names: string): Element[];
+  querySelector(selectors: string): Element | null;
+  querySelectorAll(selectors: string): Element[];
+  createElement(tagName: string): Element;
+  createTextNode(data: string): Text;
+  createComment(data: string): Comment;
+  setTextContent(text: string): void;
+}
+
+/** The Java class `com.pd4ml.dom.Element` (the DOM API, v42 engine; DMS and UA editions). */
+export interface Element extends Node {
+  getTagName(): string;
+  getAttribute(name: string): string | null;
+  hasAttribute(name: string): boolean;
+  setAttribute(name: string, value: string): void;
+  removeAttribute(name: string): void;
+  getAttributes(): Record<string, string>;
+  getId(): string;
+  setId(id: string): void;
+  getClassName(): string;
+  setClassName(className: string): void;
+  getClassList(): string[];
+  hasClass(name: string): boolean;
+  addClass(name: string): void;
+  removeClass(name: string): void;
+  toggleClass(name: string): boolean;
+  getChildren(): Element[];
+  getFirstElementChild(): Element | null;
+  getLastElementChild(): Element | null;
+  getNextElementSibling(): Element | null;
+  getPreviousElementSibling(): Element | null;
+  getElementsByTagName(name: string): Element[];
+  getElementsByClassName(names: string): Element[];
+  querySelector(selectors: string): Element | null;
+  querySelectorAll(selectors: string): Element[];
+  matches(selectors: string): boolean;
+  closest(selectors: string): Element | null;
+  getInnerHTML(): string;
+  setInnerHTML(html: string): void;
+  getOuterHTML(): string;
+  setOuterHTML(html: string): void;
+  setTextContent(text: string): void;
+}
+
+/** The Java class `com.pd4ml.dom.Text` (the DOM API, v42 engine; DMS and UA editions). */
+export interface Text extends Node {
+  getData(): string;
+  setData(data: string): void;
+  isWhitespace(): boolean;
+  setTextContent(text: string): void;
+}
+
+/** The Java class `com.pd4ml.dom.Comment` (the DOM API, v42 engine; DMS and UA editions). */
+export interface Comment extends Node {
+  getData(): string;
+  setData(data: string): void;
+  getTextContent(): string;
+  setTextContent(text: string): void;
+}
+
+/** The Java class `com.pd4ml.dom.DocumentType` (the DOM API, v42 engine; DMS and UA editions). */
+export interface DocumentType extends Node {
+  getName(): string;
+  getPublicId(): string;
+  getSystemId(): string;
+  setTextContent(text: string): void;
+}
+
+/** The Java class `com.pd4ml.dom.Layout` (the DOM API, v42 engine; DMS and UA editions). */
+export interface Layout extends JavaObject {
+  getPageCount(): number;
+  getPageWidth(page: number | JavaFloat): number;
+  getPageHeight(page: number | JavaFloat): number;
+  getPageNumber(page: number | JavaFloat): number;
+  getBoxes(element: Element): LayoutBox[];
+  getPages(element: Element): number[];
+  getComputedStyle(element: Element, property: string): string | null;
+  elementAt(page: number | JavaFloat, x: number | JavaFloat, y: number | JavaFloat): Element | null;
+}
+
+/** The Java class `com.pd4ml.dom.LayoutBox` (the DOM API, v42 engine; DMS and UA editions). */
+export interface LayoutBox extends JavaObject {
+  getPage(): number;
+  getX(): number;
+  getY(): number;
+  getWidth(): number;
+  getHeight(): number;
+}

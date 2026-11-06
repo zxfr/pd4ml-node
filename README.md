@@ -21,7 +21,7 @@ pd.readHTML('invoice.html');                                // a path, URL or Bu
 pd.writePDF('invoice.pdf', PdfSpec.PDFA_3B);                // a path, fd or stream; no target: a Buffer
 ```
 
-The first use downloads the most recent PD4ML build (see *Installation* below). TypeScript
+The first use downloads a PD4ML build (see *Installation* below). TypeScript
 declarations of the whole API are included.
 
 ## Requirements
@@ -35,14 +35,19 @@ The package contains the Node module only; PD4ML itself comes from the PD4ML Mav
 (<https://pd4ml.com/maven2>):
 
 - **Automatically.** If no PD4ML build is installed or configured, the first use of PD4ML
-  downloads the most recent 4.x release, with the Bouncy Castle jars (for encryption and
-  signing). Every file is verified against its SHA-1 checksum and stored in a per-user cache
-  directory (`%LOCALAPPDATA%\pd4ml-node`, `~/.cache/pd4ml-node`, or `PD4ML_HOME`).
+  downloads the default build, with the Bouncy Castle jars (for encryption and signing).
+  Every file is verified against its SHA-1 checksum and stored in a per-user cache directory
+  (`%LOCALAPPDATA%\pd4ml-node`, `~/.cache/pd4ml-node`, or `PD4ML_HOME`).
 - **Ahead of time**, better for servers and container images: `npx pd4ml install`. Run it again
   to update to a newer release.
 
+The default build is the most recent PD4ML release from 4.2.0 on: the 4.2 API below
+(`readEML()`, `addAllowedResourceLocation()`, the DOM API, ...) needs PD4ML 4.2, and the
+current releases are 4.1.x. Until 4.2.0 is released, the default is therefore the most recent
+4.2.x snapshot; installs move to 4.2.0 by themselves once it is out.
+
 `PD4ML_AUTO_INSTALL=0` turns the automatic download off. `npx pd4ml list` shows the available
-versions, `npx pd4ml install 4.0.23fx2` installs a specific one, and `PD4ML_CLASSPATH` /
+versions, `npx pd4ml install 4.1.2` installs a specific one, and `PD4ML_CLASSPATH` /
 `PD4ML_CLASSPATH_FILE` point the module at any other build.
 
 ## How it works
@@ -58,6 +63,12 @@ while it runs; servers under concurrent load convert in worker threads.
 - Helpers on Java objects start with `$`: `$get(field)`, `$set(field, value)`, `$class`, `$enum`.
 - `Java.float(10)` passes a number as a Java float; Java's `byte[]` is a `Buffer`.
 - Java exceptions are `JavaError`s (`e.isInstanceOf('java.io.IOException')`).
+
+With PD4ML 4.2, `readEML()`/`readMHT()` convert e-mail messages and saved web pages,
+`addAllowedResourceLocation()` restricts what untrusted HTML can load, and the DOM API
+(`pd.getDocument()`, `pd.layout()`; v42 engine, DMS and UA editions) changes the parsed document
+before conversion, with Java lists as JavaScript arrays (`doc.querySelectorAll('td')`). See the
+guide, sections 5.19-5.21.
 
 ## Command line
 

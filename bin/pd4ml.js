@@ -10,7 +10,9 @@ const { Bridge } = require('../lib/bridge');
 const USAGE = `usage: pd4ml <command> [options]
 
   install [VERSION] [--snapshots] [--jakarta] [--home DIR] [--force] [--no-bouncycastle]
-                      download a PD4ML build (default: the most recent 4.* release), or update to it
+                      download a PD4ML build, or update to it; default: the most recent release
+                      from 4.2.0 on (the 4.2 API needs it), until that is out the newest 4.2.x
+                      snapshot; --snapshots: the newest 4.* build of all
   list [--snapshots] [--jakarta]
                       the versions in the PD4ML repository (* the installed one)
   version             the PD4ML version the module runs (downloads it on first use)

@@ -83,7 +83,7 @@ npx pd4ml install
 
 Either way, the module:
 
-- downloads the most recent PD4ML 4.x release;
+- downloads the default PD4ML build (below);
 - downloads the Bouncy Castle jars PD4ML needs for encryption and signing, from Maven Central;
 - checks every file against its published SHA-1 checksum;
 - stores them in a per-user cache directory: `%LOCALAPPDATA%\pd4ml-node` on Windows,
@@ -92,11 +92,21 @@ Either way, the module:
 The module then uses that build. Later runs do not check for newer PD4ML releases: run
 `npx pd4ml install` again to update. Updating the npm package does not change the PD4ML build.
 
+**The default build** is the most recent PD4ML release from 4.2.0 on. Parts of this module's
+API need PD4ML 4.2 - `readEML()`/`readMHT()`, `addAllowedResourceLocation()`, XMP
+`addMetadata()` and the DOM API ([5.19-5.21](#519-e-mail-messages-and-saved-web-pages)) - and
+the published releases so far, 4.1.x, predate it. Until 4.2.0 is released, the default is
+therefore the most recent **4.2.x development snapshot** (4.2.0-SNAPSHOT); once 4.2.0 is out,
+`npx pd4ml install` moves to it by itself, and later snapshots are not picked up unless asked
+for with `--snapshots`. The `-jakarta` variant has no 4.2 build yet: `--jakarta` installs its
+most recent release. To stay on 4.1.x (without the 4.2 API), install it explicitly:
+`npx pd4ml install 4.1.2`.
+
 | Option | |
 |---|---|
-| *(none)* | the most recent 4.x release, or an update to it |
+| *(none)* | the default build (the most recent release from 4.2.0 on, until then the most recent 4.2.x snapshot), or an update to it |
 | `--snapshots` | the most recent 4.x build, including development snapshots |
-| `npx pd4ml install 4.0.23fx2` | an exact version |
+| `npx pd4ml install 4.1.2` | an exact version (also snapshots: `4.2.0-SNAPSHOT`) |
 | `--jakarta` | the `-jakarta` variant (for Jakarta EE / Servlet 6 environments) |
 | `--home DIR` | install into `DIR` (default: `PD4ML_HOME`, else the cache directory) |
 | `--force` | download again |
@@ -540,9 +550,8 @@ The image formats are `PNG8`, `PNG24`, `TIFF` and `TIFF_COMPRESSED` (constants i
 The TIFF formats need Java 9 or later.
 The v42 engine does not support the multi-page TIFF formats yet; use the v40 engine for them.
 
-With the v42 engine, DOCX/RTF output can be made *editable*: positioned content becomes text
-boxes and form fields instead of pictures. To enable it, call
-`pd.setParam(Constants.PD4ML_WORD_EDITABLE, 'true')`.
+With the v42 engine, DOCX/RTF output is *editable*: positioned content becomes text boxes
+and form fields, not pictures.
 
 ### 5.12 Interactive forms and multi-column layout
 
@@ -593,6 +602,7 @@ pd.setLogLevel(1);                       // 0 (silent) .. 5
 pd.setAuthorName('Reporting service');
 pd.setDocumentTitle('Monthly statement');
 pd.addMetadata('StatementId', '2026-10', false);
+pd.addMetadata('http://www.w3.org/ns/tdmrep/', 'tdm', 'reservation', '1');   // XMP, own namespace (4.2)
 pd.readHtmlString('<h1>Statement</h1>');
 pd.writePDF('statement.pdf');
 const pages = Number(pd.getLastRenderInfo(Constants.PD4ML_TOTAL_PAGES));
@@ -702,6 +712,135 @@ console.log(`PD4ML ${version()}${pd.isPro() ? ' pro' : ''}`);
 Without a license, PD4ML is fully functional but marks its output. See
 [licensing](https://pd4ml.com/docs/#3.-licensing).
 
+### 5.19 E-mail messages and saved web pages
+
+PD4ML 4.2 reads e-mail messages (`.eml`) and web pages saved as a single file (`.mht`,
+`.mhtml`), and writes them to any output format:
+
+<!-- no-test -->
+```js
+const fs = require('fs');
+const { PD4ML } = require('pd4ml');
+
+const pd = new PD4ML();
+pd.readEML('message.eml');                        // a path, URL, Buffer or Java InputStream
+pd.writePDF('message.pdf');
+
+const page = new PD4ML();
+page.readMHT(fs.readFileSync('page.mht'));        // a saved web page
+page.writePDF('page.pdf');
+```
+
+A message becomes a block with From, Date, To, Cc and Subject, then its body (the HTML version
+if there is one) with the images it embeds; its attachments are embedded in the PDF. A saved page
+shows with the images, style sheets and fonts saved in the file. `readHTML()` recognizes both
+kinds of file too, by the `.eml`/`.mht`/`.mhtml` ending or by how the content starts; for mail
+from outside your control, say what it is with `readEML()`/`readMHT()`.
+
+Of the resources such a file refers to but does not contain, only `https://` ones are loaded
+(a remote image tells the sender the message was opened). `addAllowedResourceLocation()`
+replaces that default (5.20). See
+[converting e-mail and saved web pages](https://pd4ml.com/docs/features/converting-e-mail-and-saved-web-pages.html).
+
+### 5.20 Untrusted HTML: restricting what is loaded
+
+When the HTML is not entirely yours (written by users, from e-mails, from other systems), every
+reference in it is a request your server makes: `file:` URLs read local files, `http://10.0.0.5/`
+reaches internal services. `addAllowedResourceLocation()` limits loading to locations you trust:
+
+```js
+const { PD4ML } = require('pd4ml');
+
+const userHtml = '<p>Hello <img src="file:/etc/passwd"> <img src="https://cdn.example.com/assets/logo.png"></p>';
+const pd = new PD4ML();
+pd.addAllowedResourceLocation('https://cdn.example.com/assets/');
+pd.addAllowedResourceLocation('https://*.example.org/, file:/opt/app/templates/');
+pd.readHtmlString(userHtml);
+pd.writePDF('user.pdf');
+```
+
+A resource loads only if its URL starts with one of the locations (comma-separated; each call
+adds to the list; case is ignored; `*` matches any characters except `/`; a local path stands for
+its `file:` URL). A rejected resource is skipped and the document converted without it; with
+`setErrorPolicy(ErrorPolicy.PEDANTIC)` or `STRICT` it stops the conversion with a
+`java.io.IOException` instead. The list covers the document itself when read from a URL, style
+sheets, images, web fonts and attachments, but not `data:` URIs or fonts from `useTTF()`. See
+[restricting resource loading](https://pd4ml.com/docs/features/restricting-resource-loading-for-untrusted-html.html).
+Requires PD4ML 4.2 (earlier builds: `setParam(Constants.PD4ML_ALLOWED_RESOURCE_LOCATION, ...)`).
+
+### 5.21 Changing the document before conversion (DOM API)
+
+With the v42 engine, `pd.getDocument()` gives the HTML document PD4ML has parsed, between
+`readHTML()` and the output. Query it with CSS selectors and change it; the output is laid out
+as if the HTML had been written that way:
+
+```js
+const { PD4ML } = require('pd4ml');
+
+const pd = new PD4ML();                            // v42
+pd.readHTML('report.html');
+const doc = pd.getDocument();
+
+doc.querySelector('h1').setTextContent('Monthly report');
+for (const p of doc.querySelectorAll('p')) {       // a JavaScript array of Elements
+  p.addClass('note');
+}
+const footer = doc.createElement('p');
+footer.setInnerHTML('Generated <b>automatically</b>');
+doc.getBody().appendChild(footer);
+
+const style = doc.createElement('style');
+style.setTextContent('.note { color: #036 } @page { size: A4; margin: 15mm }');
+doc.getHead().appendChild(style);
+
+console.log(doc.toHtml());
+pd.writePDF('report-dom.pdf');
+```
+
+`pd.layout()` lays the document out into pages without writing it, and tells where each element
+ended up (in points, from the top left of the page; page 1 is the first):
+
+```js
+const { PD4ML } = require('pd4ml');
+
+const pd = new PD4ML();
+pd.readHTML('report.html');
+const doc = pd.getDocument();
+const h1 = doc.querySelector('h1');
+
+const layout = pd.layout();
+console.log(`${layout.getPageCount()} page(s)`);
+for (const box of layout.getBoxes(h1)) {           // LayoutBox[]
+  console.log(box.getPage(), box.getX(), box.getY(), box.getWidth(), box.getHeight());
+}
+console.log(layout.getPages(h1), layout.getComputedStyle(h1, 'font-size'));
+
+if (layout.getPages(h1).length > 1) h1.setAttribute('style', 'page-break-before: always');
+pd.writePDF('report-checked.pdf');                  // a layout is a snapshot: call layout() again after changes
+```
+
+- The objects are `Document`, `Element`, `Text`, `Comment`, `DocumentType` (all with the `Node`
+  methods: `getParentNode()`, `getChildNodes()`, `appendChild()`, `insertBefore()`, `remove()`,
+  `cloneNode()`, `getTextContent()`, `toHtml()`...), `Layout` and `LayoutBox`. Their methods have
+  the Java names; the TypeScript declarations and [api.md](api.md#node) list them all.
+- Java lists come back as **arrays** (`querySelectorAll`, `getChildNodes`, `getChildren`,
+  `getElementsByTagName`, `getBoxes`, `getPages`), `getClassList()` as an array of strings and
+  `getAttributes()` as a plain object. They are snapshots: removing nodes while going through
+  one is safe.
+- Two objects for the same node are `a.equals(b)`, not necessarily `a === b`.
+- An invalid selector or a disallowed insertion throws a `JavaError`
+  (`java.lang.IllegalArgumentException`).
+- `getDocument()` and `layout()` throw (`java.lang.IllegalStateException`) before `readHTML()`
+  and with the v40 engine.
+- `$[name]` placeholders of `setDynamicData()` are filled in by `readHTML()`, and the document
+  title is taken then too: change it with `setDocumentTitle()`.
+
+The DOM API is part of the **DMS and UA editions** (PD4ML 4.2 and later). It can be evaluated
+without a license (the output carries the evaluation watermark); with an STD or PRO license the
+output of a document it was used on carries "PD4ML EVALUATION MODE" banners. See
+[modifying the HTML document before conversion](https://pd4ml.com/docs/features/modifying-the-html-document-before-conversion.html)
+and [editions](https://pd4ml.com/products/).
+
 ---
 
 ## 6. Tips and hints
@@ -721,12 +860,12 @@ Without a license, PD4ML is fully functional but marks its output. See
   differently than in the browser, set `setHtmlWidth` to the width the page was designed for.
 - **Index fonts once** with `-configure.fonts`, instead of pointing `useTTF` at a large
   unindexed directory on every conversion.
-- **Restrict what documents can load** when converting untrusted HTML. Use `setParam` with
-  `Constants.PD4ML_ALLOWED_RESOURCE_LOCATION` and `PD4ML_DISABLE_EXTERNAL_ATTACHMENTS`.
+- **Restrict what documents can load** when converting untrusted HTML:
+  `addAllowedResourceLocation()` (5.20), and `setParam` with `PD4ML_DISABLE_EXTERNAL_ATTACHMENTS`.
 - **TypeScript**: the package's declarations cover the whole PD4ML API, so editors complete the
   Java methods too.
 - **Pin the build in production.** Use `npx pd4ml install <version>` or a `PD4ML_CLASSPATH` to a
-  jar you keep, rather than following the latest release.
+  jar you keep, rather than following the default build.
 
 ## 7. Troubleshooting
 
@@ -766,6 +905,7 @@ Without a license, PD4ML is fully functional but marks its output. See
 |---|---|
 | `readHTML(source, baseUrl, encoding)` | `source`: a path, URL string or object, `Buffer`/`Uint8Array`, or a Java `URL`/`InputStream` |
 | `readHtmlString(html, baseUrl)` | the document as a string |
+| `readEML(source)`, `readMHT(source)` | an e-mail message, a saved web page (4.2): a path, URL, `Buffer`/`Uint8Array`, or a Java `URL`/`InputStream` |
 | `writePDF(target, spec)` | `target`: a path, file descriptor or writable stream; none: returns a `Buffer`. `spec`: a `PdfSpec`, a keyword (`'pdf/a-2b'`) or `'PDF'`/`'PDFA'`/`'PDFUA'` |
 | `writeDOCX(target)`, `writeRTF(target, rtfWmf)` | as `writePDF` |
 | `renderAsImages(format)`, `renderPng()` | pages as encoded images (Buffers); `renderAsImages(dir, name, format)` writes files |
@@ -774,7 +914,8 @@ Without a license, PD4ML is fully functional but marks its output. See
 
 All other methods are those of the Java class `com.pd4ml.PD4ML` ([api.md](api.md#pd4ml),
 [Java API](https://pd4ml.com/docs/#6.-the-java-api)); static ones are called on the class
-(`PD4ML.getVersion()`). The Java object itself is `pd.java`.
+(`PD4ML.getVersion()`). The Java object itself is `pd.java`. `getDocument()` and `layout()` (4.2,
+v42) return the DOM API objects (5.21), whose Java lists come back as arrays.
 
 `ResourceProvider` and `CustomTag` are extended in **Java**: register yours with
 `addCustomResourceProvider` / `addCustomTagHandler`, and put its classes on the classpath. Java
