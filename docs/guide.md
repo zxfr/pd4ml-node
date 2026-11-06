@@ -98,8 +98,9 @@ API need PD4ML 4.2 - `readEML()`/`readMHT()`, `addAllowedResourceLocation()`, XM
 the published releases so far, 4.1.x, predate it. Until 4.2.0 is released, the default is
 therefore the most recent **4.2.x development snapshot** (4.2.0-SNAPSHOT); once 4.2.0 is out,
 `npx pd4ml install` moves to it by itself, and later snapshots are not picked up unless asked
-for with `--snapshots`. The `-jakarta` variant has no 4.2 build yet: `--jakarta` installs its
-most recent release. To stay on 4.1.x (without the 4.2 API), install it explicitly:
+for with `--snapshots`. PD4ML 4.2 has no separate `-jakarta` variant: its builds contain the
+Jakarta tag library, so `--jakarta` installs the same 4.2 build (an older `-jakarta` build only
+when asked for by version, e.g. `npx pd4ml install 4.0.20fx3-jakarta`). To stay on 4.1.x (without the 4.2 API), install it explicitly:
 `npx pd4ml install 4.1.2`.
 
 | Option | |
@@ -107,7 +108,7 @@ most recent release. To stay on 4.1.x (without the 4.2 API), install it explicit
 | *(none)* | the default build (the most recent release from 4.2.0 on, until then the most recent 4.2.x snapshot), or an update to it |
 | `--snapshots` | the most recent 4.x build, including development snapshots |
 | `npx pd4ml install 4.1.2` | an exact version (also snapshots: `4.2.0-SNAPSHOT`) |
-| `--jakarta` | the `-jakarta` variant (for Jakarta EE / Servlet 6 environments) |
+| `--jakarta` | for Jakarta EE / Servlet 6 environments: a `-jakarta` variant if one fits; PD4ML 4.2 has none (its builds contain the Jakarta tag library), so the same 4.2 build |
 | `--home DIR` | install into `DIR` (default: `PD4ML_HOME`, else the cache directory) |
 | `--force` | download again |
 | `--no-bouncycastle` | skip the Bouncy Castle jars (encryption and signing will not work) |
