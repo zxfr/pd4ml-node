@@ -64,7 +64,8 @@ while it runs; servers under concurrent load convert in worker threads.
 - `Java.float(10)` passes a number as a Java float; Java's `byte[]` is a `Buffer`.
 - Java exceptions are `JavaError`s (`e.isInstanceOf('java.io.IOException')`).
 
-With PD4ML 4.2, `readEML()`/`readMHT()` convert e-mail messages and saved web pages,
+With PD4ML 4.2, `readEML()`/`readMHT()` convert e-mail messages and saved web pages (DMS and UA
+editions),
 `addAllowedResourceLocation()` restricts what untrusted HTML can load, and the DOM API
 (`pd.getDocument()`, `pd.layout()`; v42 engine, DMS and UA editions) changes the parsed document
 before conversion, with Java lists as JavaScript arrays (`doc.querySelectorAll('td')`). See the

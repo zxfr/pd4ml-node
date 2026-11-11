@@ -715,6 +715,10 @@ Without a license, PD4ML is fully functional but marks its output. See
 
 ### 5.19 E-mail messages and saved web pages
 
+> **Editions.** E-mail and saved web page input — `readEML()`/`readMHT()`, and `readHTML()` for input it
+> recognizes as one of them — is part of the PD4ML **DMS and UA editions**. With an STD or PRO license it
+> works, but the output carries the "PD4ML EVALUATION MODE" banners.
+
 PD4ML 4.2 reads e-mail messages (`.eml`) and web pages saved as a single file (`.mht`,
 `.mhtml`), and writes them to any output format:
 
@@ -906,7 +910,7 @@ and [editions](https://pd4ml.com/products/).
 |---|---|
 | `readHTML(source, baseUrl, encoding)` | `source`: a path, URL string or object, `Buffer`/`Uint8Array`, or a Java `URL`/`InputStream` |
 | `readHtmlString(html, baseUrl)` | the document as a string |
-| `readEML(source)`, `readMHT(source)` | an e-mail message, a saved web page (4.2): a path, URL, `Buffer`/`Uint8Array`, or a Java `URL`/`InputStream` |
+| `readEML(source)`, `readMHT(source)` | an e-mail message, a saved web page (4.2; DMS and UA editions): a path, URL, `Buffer`/`Uint8Array`, or a Java `URL`/`InputStream` |
 | `writePDF(target, spec)` | `target`: a path, file descriptor or writable stream; none: returns a `Buffer`. `spec`: a `PdfSpec`, a keyword (`'pdf/a-2b'`) or `'PDF'`/`'PDFA'`/`'PDFUA'` |
 | `writeDOCX(target)`, `writeRTF(target, rtfWmf)` | as `writePDF` |
 | `renderAsImages(format)`, `renderPng()` | pages as encoded images (Buffers); `renderAsImages(dir, name, format)` writes files |
