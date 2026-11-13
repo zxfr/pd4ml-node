@@ -1,7 +1,7 @@
 {
   "name": "pd4ml",
-  "version": "1.1.2",
-  "description": "PD4ML for Node.js: HTML and CSS to PDF, PDF/A, PDF/UA, ZUGFeRD, DOCX, RTF and images with the full PD4ML API",
+  "version": "1.2.0",
+  "description": "PD4ML for Node.js: HTML and CSS to PDF, PDF/A, PDF/UA, ZUGFeRD, DOCX, RTF, Markdown and images with the full PD4ML API",
   "keywords": [
     "pdf",
     "html",

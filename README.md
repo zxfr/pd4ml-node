@@ -1,6 +1,6 @@
 # pd4ml — PD4ML for Node.js
 
-HTML and CSS to **PDF**, **PDF/A**, **PDF/UA**, **ZUGFeRD/Factur-X**, **DOCX**, **RTF** and page
+HTML and CSS to **PDF**, **PDF/A**, **PDF/UA**, **ZUGFeRD/Factur-X**, **DOCX**, **RTF**, **Markdown** and page
 **images**, with the full public [PD4ML](https://pd4ml.com) API (Java package `com.pd4ml`)
 available to Node.js applications. New converters use PD4ML's **v42 layout engine** by default.
 

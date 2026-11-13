@@ -164,6 +164,8 @@ asyncResourceLoader(threadPoolSize: number | JavaFloat): void
 | `Constants.PDFA` | `string` | static read-only |
 | `Constants.PDFUA` | `string` | static read-only |
 | `Constants.DOCX` | `string` | static read-only |
+| `Constants.MARKDOWN` | `string` | static read-only |
+| `Constants.PD4ML_DOCX_EMBED_FONTS` | `string` | static read-only |
 | `Constants.RTF` | `string` | static read-only |
 | `Constants.RTF_WMF` | `string` | static read-only |
 | `Constants.PNG8` | `string` | static read-only |

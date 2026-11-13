@@ -77,6 +77,12 @@ export interface PD4ML extends PD4MLJava {
   writeRTF(): Buffer;
   writeRTF(target: null, rtfWmf?: boolean): Buffer;
   writeRTF(target: Target, rtfWmf?: boolean): void;
+  /** Markdown for LLM/RAG pipelines (PD4ML 4.2.0 or newer, DMS and UA editions). */
+  writeMarkdown(): Buffer;
+  writeMarkdown(target: null, pageMarkers?: boolean): Buffer;
+  writeMarkdown(target: Target, pageMarkers?: boolean): void;
+  /** The document as a Markdown string; `pageMarkers`: `<!-- page N -->` at each page start. */
+  toMarkdown(pageMarkers?: boolean): string;
   renderAsImages(format: string): Buffer[];
   renderAsImages(directory: string, name: string, format: string): JavaObject;
   renderAsImages(): JavaObject[];
@@ -310,6 +316,8 @@ export interface ConstantsClass extends JavaClass {
   readonly PDFA: string;
   readonly PDFUA: string;
   readonly DOCX: string;
+  readonly MARKDOWN: string;
+  readonly PD4ML_DOCX_EMBED_FONTS: string;
   readonly RTF: string;
   readonly RTF_WMF: string;
   readonly PNG8: string;

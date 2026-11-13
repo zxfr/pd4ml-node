@@ -1,7 +1,7 @@
 # PD4ML for Node.js — User Guide
 
 `pd4ml` brings [PD4ML](https://pd4ml.com) to Node.js: it converts HTML and CSS into **PDF**,
-**PDF/A**, **PDF/UA**, **ZUGFeRD/Factur-X** invoices, **DOCX**, **RTF** and **page images**, and
+**PDF/A**, **PDF/UA**, **ZUGFeRD/Factur-X** invoices, **DOCX**, **RTF**, **Markdown** and **page images**, and
 gives Node applications the complete public PD4ML API.
 
 PD4ML is a Java library. The module runs it in a small Java *bridge* process that Node talks to.
@@ -199,7 +199,7 @@ const pdf: Buffer = pd.writePDF();
 A document is **read once and written any number of times**:
 
 - `readHTML` parses the document and lays it out;
-- each `writePDF`, `writeDOCX`, `writeRTF` or `renderAsImages` call then produces one output from
+- each `writePDF`, `writeDOCX`, `writeRTF`, `writeMarkdown` or `renderAsImages` call then produces one output from
   that same layout.
 
 Settings (page size, headers, fonts...) go before `readHTML`. See
@@ -332,7 +332,7 @@ pd.readHtmlString(html);
 const pdf = pd.writePDF();               // the PDF as a Buffer
 ```
 
-`writePDF`, `writeDOCX` and `writeRTF` return the document as a `Buffer` when given no target.
+`writePDF`, `writeDOCX`, `writeRTF` and `writeMarkdown` return the document as a `Buffer` when given no target.
 Given a file path, a file descriptor, or a writable stream (an HTTP response, an
 `fs.WriteStream`), they write into it.
 
@@ -553,6 +553,25 @@ The v42 engine does not support the multi-page TIFF formats yet; use the v40 eng
 
 With the v42 engine, DOCX/RTF output is *editable*: positioned content becomes text boxes
 and form fields, not pictures.
+
+**Markdown** for LLM, RAG and search pipelines (PD4ML 4.2.0 or newer, v42 engine): only the
+text a reader sees, in reading order, with headings, lists, tables, links, footnotes and image
+references. With `pageMarkers` each page starts with `<!-- page N -->`, the page of the PDF the
+same conversion writes, so a chunk of text can be cited by page:
+
+```js
+const { PD4ML } = require('pd4ml');
+
+const pd = new PD4ML();
+pd.readHtmlString('<h1>Report</h1><p>Revenue grew by <b>12%</b>.</p>');
+pd.writePDF('report.pdf');
+const md = pd.toMarkdown(true);           // a string: '<!-- page 1 -->\n\n# Report\n\n...'
+pd.writeMarkdown('report.md');            // or to a stream, a file descriptor, or a Buffer
+```
+
+Markdown output is a feature of the DMS and UA editions: with another license, or none, the
+Markdown carries evaluation notes. See
+[HTML to Markdown for LLM and RAG Pipelines](https://pd4ml.com/docs/features/html-to-markdown-for-llm-and-rag-pipelines.html).
 
 ### 5.12 Interactive forms and multi-column layout
 
@@ -857,7 +876,7 @@ and [editions](https://pd4ml.com/products/).
   always caused by unresolved relative links ([details](https://pd4ml.com/docs/#6.2-reading-the-source)).
 - **Settings go before `readHTML`.** Page size, headers, fonts and styles apply to the layout
   `readHTML` makes; writes afterwards only choose the output format.
-- **Write several formats from one read.** PDF, DOCX and page images from a single `readHTML`
+- **Write several formats from one read.** PDF, DOCX, Markdown and page images from a single `readHTML`
   cost one layout.
 - **Print CSS works.** `@page { size: A4 landscape; margin: 15mm }`, `@media print` and
   `page-break-*` / `break-*` are honoured. They are often simpler than API calls.
@@ -913,6 +932,7 @@ and [editions](https://pd4ml.com/products/).
 | `readEML(source)`, `readMHT(source)` | an e-mail message, a saved web page (4.2; DMS and UA editions): a path, URL, `Buffer`/`Uint8Array`, or a Java `URL`/`InputStream` |
 | `writePDF(target, spec)` | `target`: a path, file descriptor or writable stream; none: returns a `Buffer`. `spec`: a `PdfSpec`, a keyword (`'pdf/a-2b'`) or `'PDF'`/`'PDFA'`/`'PDFUA'` |
 | `writeDOCX(target)`, `writeRTF(target, rtfWmf)` | as `writePDF` |
+| `writeMarkdown(target, pageMarkers)`, `toMarkdown(pageMarkers)` | Markdown, as `writePDF` / as a string |
 | `renderAsImages(format)`, `renderPng()` | pages as encoded images (Buffers); `renderAsImages(dir, name, format)` writes files |
 | `monitorProgressWith(fn)` | a function `(messageId, progress, note, msec)` or a Java `ProgressListener` |
 | `useHtmlRenderer(engine, htmlWidth, params)` | the layout engine by name; `pd.engine` tells which one is in use |
